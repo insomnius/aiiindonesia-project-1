@@ -3,11 +3,14 @@
 import Image from 'next/image'
 import { FormEvent } from 'react'
 import { useState, useEffect } from 'react'
+import { Prediction } from './response'
 
 export default function Home() {
   const [file, setFile] = useState<File>()
   const [previewImage, setPreviewImage] = useState<string>()
   const [isDemoAvailable, setIsDemoAvailable] = useState<boolean>(true)
+  const [prediction, setPrediction] = useState<Prediction>()
+  const [submission, setSubmission] = useState<boolean>(false)
 
   useEffect(() => {
     async function checkDemoAvailability() {
@@ -26,29 +29,37 @@ export default function Home() {
 
   async function onSubmit(event: FormEvent<HTMLFormElement>) {
     event.preventDefault()
+    if (submission) {
+      return
+    }
+    setPrediction(undefined)
+    setSubmission(true)
 
     if (!file) {
       alert("File cannot be empty...")
+      return
     }
 
     const formData = new FormData(event.currentTarget)
     const response = await fetch('http://localhost:5000/predict', {
       method: 'POST',
       body: formData,
-    }).catch()
+    })
 
     // Handle response if necessary
-    const data = await response.json()
-    console.log(data)
+    const data = await response.json() as Prediction
+    setPrediction(data)
 
-    // Display preview image
     if (file) {
-      const reader = new FileReader()
-      reader.onloadend = () => {
-        setPreviewImage(reader.result as string)
-      }
-      reader.readAsDataURL(file)
+      const url = URL.createObjectURL(file)
+      setPreviewImage(url)
+      setFile(undefined)
+      setSubmission(false)
+      return () => URL.revokeObjectURL(url)
     }
+
+    setFile(undefined)
+    setSubmission(false)
   }
 
   return (
@@ -108,26 +119,36 @@ export default function Home() {
         <h1 className="text-center font-semibold text-2xl">
           Demo
         </h1>
-        <form onSubmit={onSubmit} className='flex flex-col space-y-5'>
-          <input
-            type="file"
-            name="file"
-            onChange={(e) => {
-              setFile(e.target.files?.[0])
-              setPreviewImage(undefined)
-            }}
-          />
+        <form onSubmit={onSubmit} className='flex space-x-5'>
           <div>
-            <button type='submit' className='bg-black text-white px-5 py-2 rounded-lg hover:bg-white hover:text-black border border-black'>
+            <input
+              type="file"
+              name="file"
+              onChange={(e) => {
+                setFile(e.target.files?.[0])
+                setPreviewImage(undefined)
+              }}
+              className='py-4 px-2 border border-black'
+            />
+          </div>
+          <div className='my-auto'>
+            <button type='submit' className='bg-gray-100 px-5 py-2 rounded-lg hover:bg-gray-300  border border-gray-500'>
               Predict
             </button>
           </div>
         </form>
 
         {previewImage && (
-          <div className="mt-5">
-            <h2 className="text-lg font-semibold mb-2">Preview Image</h2>
-            <Image src={previewImage} alt="Preview" className="max-w-full h-auto" />
+          <div className='flex'>
+            <div className="mt-5">
+              <h2 className="text-lg font-semibold mb-2">Preview Image</h2>
+              <Image src={previewImage} alt="Preview" className="max-w-full h-auto" width={399} height={399} />
+            </div>
+            {prediction && (
+              <div>
+                <p>Gender: <span className='font-bold'>{prediction.gender}</span></p>
+              </div>
+            )}
           </div>
         )}
       </section>
