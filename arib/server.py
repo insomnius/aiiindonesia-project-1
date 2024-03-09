@@ -15,7 +15,7 @@ app = Flask(__name__)
 CORS(app, origins=["http://localhost:3000"])
 
 # Load the saved InceptionV3 model
-saved_model = load_model("model_saved/experimen-inception-v3-iteration-1.h5")
+saved_model = load_model("model_saved/inception-v3-30%-test-size-epoch-20.h5")
 
 @app.route('/predict', methods=['POST'])
 def predict_gender():
