@@ -7,6 +7,7 @@ import numpy as np
 from io import BytesIO
 import uuid
 import tempfile
+import os
 
 from PIL import ImageFile
 ImageFile.LOAD_TRUNCATED_IMAGES = True
@@ -14,13 +15,31 @@ ImageFile.LOAD_TRUNCATED_IMAGES = True
 app = Flask(__name__)
 CORS(app, origins=["http://localhost:3000"])
 
-# Load the saved InceptionV3 model
-saved_model = load_model("model_saved/inception-v3-30%-test-size-epoch-20.h5")
+list_model_dirs = os.listdir('model_saved')
+
+list_models = {}
+
+for dir in list_model_dirs:
+    list_models[dir] = load_model(f"model_saved/{dir}")
+
+@app.route('/models', methods=['GET'])
+def models():
+    return jsonify({'models': list_model_dirs})
 
 @app.route('/predict', methods=['POST'])
 def predict_gender():
     if 'file' not in request.files:
         return jsonify({'error': 'No file part'}), 400
+
+    if request.form.get('model') == '':
+        return jsonify({'error': 'Parameter model cannot be empty'}), 400
+
+    model = request.form.get('model')
+    print("Model used for the request", model)
+    if model not in list_model_dirs :
+        return jsonify({'error': 'Model is invalid type'}), 400
+
+    saved_model = list_models[model]
 
     file = request.files['file']
     if file.filename == '':
@@ -38,7 +57,7 @@ def predict_gender():
         img_array = preprocess_input(img_array)
 
         prediction = saved_model.predict(img_array)
-
+        print("prediction", prediction)
         result = "Female"
         # Interpret the prediction result
         if prediction[0][0] > 0.5:

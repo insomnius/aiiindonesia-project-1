@@ -3,7 +3,7 @@
 import Image from 'next/image'
 import { FormEvent } from 'react'
 import { useState, useEffect } from 'react'
-import { Prediction } from './response'
+import { Prediction, Models } from './response'
 
 export default function Home() {
   const [file, setFile] = useState<File>()
@@ -11,6 +11,7 @@ export default function Home() {
   const [isDemoAvailable, setIsDemoAvailable] = useState<boolean>(true)
   const [prediction, setPrediction] = useState<Prediction>()
   const [submission, setSubmission] = useState<boolean>(false)
+  const [models, setModels] = useState<Models>()
 
   useEffect(() => {
     async function checkDemoAvailability() {
@@ -18,7 +19,12 @@ export default function Home() {
         const response = await fetch('http://localhost:5000/predict', { method: 'OPTIONS' })
         if (!response.ok) {
           setIsDemoAvailable(false)
+          return
         }
+
+        const modelListResponse = await fetch('http://localhost:5000/models', { method: 'GET' })
+        const models = await modelListResponse.json() as Models
+        setModels(models)
       } catch (error) {
         setIsDemoAvailable(false)
       }
@@ -37,6 +43,7 @@ export default function Home() {
 
     if (!file) {
       alert("File cannot be empty...")
+      setSubmission(false)
       return
     }
 
@@ -53,12 +60,10 @@ export default function Home() {
     if (file) {
       const url = URL.createObjectURL(file)
       setPreviewImage(url)
-      setFile(undefined)
       setSubmission(false)
       return () => URL.revokeObjectURL(url)
     }
 
-    setFile(undefined)
     setSubmission(false)
   }
 
@@ -115,26 +120,43 @@ export default function Home() {
           </div>
         </div>
       </section>
-      <section className="w-full py-20 space-y-20">
+      <section className="w-full py-20 space-y-2">
         <h1 className="text-center font-semibold text-2xl">
           Demo
         </h1>
-        <form onSubmit={onSubmit} className='flex space-x-5'>
-          <div>
-            <input
-              type="file"
-              name="file"
-              onChange={(e) => {
-                setFile(e.target.files?.[0])
-                setPreviewImage(undefined)
-              }}
-              className='py-4 px-2 border border-black'
-            />
-          </div>
-          <div className='my-auto'>
-            <button type='submit' className='bg-gray-100 px-5 py-2 rounded-lg hover:bg-gray-300  border border-gray-500'>
-              Predict
-            </button>
+        <form onSubmit={onSubmit} className='space-y-5'>
+          {models && (
+            <div className="flex flex-col space-y-2">
+              <label htmlFor="formModel" className='font-semibold'>Model</label>
+              <select id="formModel" name="model" className='py-4 px-2 border border-black'>
+                {models.models.map((model) => (
+                  <option key={model}>{model}</option>
+                ))}
+              </select>
+            </div>
+          )}
+          <div className='flex space-x-5'>
+            <div className='flex-grow'>
+              <input
+                type="file"
+                name="file"
+                onChange={(e) => {
+                  const file = e.target.files?.[0]
+                  setFile(file)
+                  if (file) {
+                    const url = URL.createObjectURL(file)
+                    setPreviewImage(url)
+                    return () => URL.revokeObjectURL(url)
+                  }
+                }}
+                className='py-4 px-2 border border-black w-full'
+              />
+            </div>
+            <div className='my-auto'>
+              <button type='submit' className='bg-gray-100 px-5 py-2 rounded-lg hover:bg-gray-300  border border-gray-500'>
+                Predict
+              </button>
+            </div>
           </div>
         </form>
 
@@ -142,13 +164,13 @@ export default function Home() {
           <div className='flex'>
             <div className="mt-5">
               <h2 className="text-lg font-semibold mb-2">Preview Image</h2>
+              {prediction && (
+                <div>
+                  <p>Gender: <span className='font-bold'>{prediction.gender}</span></p>
+                </div>
+              )}
               <Image src={previewImage} alt="Preview" className="max-w-full h-auto" width={399} height={399} />
             </div>
-            {prediction && (
-              <div>
-                <p>Gender: <span className='font-bold'>{prediction.gender}</span></p>
-              </div>
-            )}
           </div>
         )}
       </section>
