@@ -108,15 +108,13 @@ export default function Home() {
           </div>
           <div className="px-5 py-5 border border-solid border-black">
             <h1>Muhammad Arief Rahman</h1>
-            <a href="/" className="underline text-blue-500">Linkedin</a>
+            <a href="https://www.linkedin.com/in/insomnius/" className="underline text-blue-500">Linkedin</a>
           </div>
           <div className="px-5 py-5 border border-solid border-black">
             <h1>Muhammad Qistan</h1>
-            <a href="/" className="underline text-blue-500">Linkedin</a>
           </div>
           <div className="px-5 py-5 border border-solid border-black">
             <h1>Rifat Rachim Khatami Fasha</h1>
-            <a href="/" className="underline text-blue-500">Linkedin</a>
           </div>
         </div>
       </section>
