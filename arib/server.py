@@ -13,14 +13,16 @@ from PIL import ImageFile
 ImageFile.LOAD_TRUNCATED_IMAGES = True
 
 app = Flask(__name__)
-CORS(app, origins=["http://localhost:3000"])
+CORS(app, origins=["http://localhost:3000", "http://aiindonesia-project-1.insomnius.dev", "https://aiindonesia-project-1.insomnius.dev"])
 
 list_model_dirs = os.listdir('model_saved')
 
 list_models = {}
 
 for dir in list_model_dirs:
-    list_models[dir] = load_model(f"model_saved/{dir}")
+    # only load model saved
+    if '.h5' in dir:
+        list_models[dir] = load_model(f"model_saved/{dir}")
 
 @app.route('/models', methods=['GET'])
 def models():

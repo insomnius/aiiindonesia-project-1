@@ -4,11 +4,14 @@ import Image from 'next/image'
 import { FormEvent } from 'react'
 import { useState, useEffect } from 'react'
 import { Prediction, Models } from './response'
+import Member from "@/app/component/member";
+import Lottie from "lottie-react";
+import lottieMeetingAnimation from '@/app/lottie/meetingAnimation.json'
 
 export default function Home() {
   const [file, setFile] = useState<File>()
   const [previewImage, setPreviewImage] = useState<string>()
-  const [isDemoAvailable, setIsDemoAvailable] = useState<boolean>(true)
+  const [isDemoAvailable, setIsDemoAvailable] = useState<boolean>(false)
   const [prediction, setPrediction] = useState<Prediction>()
   const [submission, setSubmission] = useState<boolean>(false)
   const [models, setModels] = useState<Models>()
@@ -16,13 +19,13 @@ export default function Home() {
   useEffect(() => {
     async function checkDemoAvailability() {
       try {
-        const response = await fetch('http://localhost:5000/predict', { method: 'OPTIONS' })
+        const response = await fetch(process.env.NEXT_PUBLIC_API_HOST + '/predict', { method: 'OPTIONS' })
         if (!response.ok) {
           setIsDemoAvailable(false)
           return
         }
 
-        const modelListResponse = await fetch('http://localhost:5000/models', { method: 'GET' })
+        const modelListResponse = await fetch(process.env.NEXT_PUBLIC_API_HOST + '/models', { method: 'GET' })
         const models = await modelListResponse.json() as Models
         setModels(models)
       } catch (error) {
@@ -48,7 +51,7 @@ export default function Home() {
     }
 
     const formData = new FormData(event.currentTarget)
-    const response = await fetch('http://localhost:5000/predict', {
+    const response = await fetch(process.env.NEXT_PUBLIC_API_HOST + '/predict', {
       method: 'POST',
       body: formData,
     })
@@ -67,61 +70,9 @@ export default function Home() {
     setSubmission(false)
   }
 
-  return (
-    <main className="px-16 md:px-20 pt-20 space-y-10">
-      <section className="mx-auto w-full py-20 space-y-5">
-        <h1 className="font-semibold text-2xl">
-          Joseph Redmon
-        </h1>
-        <h2 className='font-semibold text-xl'>
-          AI Face Gender Recognitions
-        </h2>
-        <p>
-          This is our web demo portofolio for AI Indonesia first project to create gender recognitions artificial intellegence.
-        </p>
-      </section>
-      <section className="w-full py-20 space-y-20">
-        <h1 className="text-center font-semibold text-2xl">
-          Team Member
-        </h1>
-
-        <div className="grid grid-cols-1 md:grid-cols-3 gap-10">
-          <div className="px-5 py-5 border border-solid border-black">
-            <h1>Lila Setiyani</h1>
-            <a href="https://www.linkedin.com/in/lila-setiyani-6284a6138/" className="underline text-blue-500">Linkedin</a>
-          </div>
-          <div className="px-5 py-5 border border-solid border-black">
-            <h1>Kusuma N Adi P</h1>
-            <a href="https://www.linkedin.com/in/kusuma-noer-adi-purnomo/" className="underline text-blue-500">Linkedin</a>
-          </div>
-          <div className="px-5 py-5 border border-solid border-black">
-            <h1>Muhammad Dhoni Apriyadi</h1>
-            <a href="https://www.linkedin.com/in/muhammaddhoniapriyadi" className="underline text-blue-500">Linkedin</a>
-          </div>
-          <div className="px-5 py-5 border border-solid border-black">
-            <h1>Indrawan Cahyadi</h1>
-            <a href="https://id.linkedin.com/in/indrawan-cahyadi-378b2a84" className="underline text-blue-500">Linkedin</a>
-          </div>
-          <div className="px-5 py-5 border border-solid border-black">
-            <h1>Kylee Valencia</h1>
-            <a href="http://www.linkedin.com/in/kylee-valencia-0b35001b9" className="underline text-blue-500">Linkedin</a>
-          </div>
-          <div className="px-5 py-5 border border-solid border-black">
-            <h1>Muhammad Arief Rahman</h1>
-            <a href="https://www.linkedin.com/in/insomnius/" className="underline text-blue-500">Linkedin</a>
-          </div>
-          <div className="px-5 py-5 border border-solid border-black">
-            <h1>Muhammad Qistan</h1>
-          </div>
-          <div className="px-5 py-5 border border-solid border-black">
-            <h1>Rifat Rachim Khatami Fasha</h1>
-          </div>
-        </div>
-      </section>
-      <section className="w-full py-20 space-y-2">
-        <h1 className="text-center font-semibold text-2xl">
-          Demo
-        </h1>
+  function demo() {
+    if (isDemoAvailable) {
+      return (
         <form onSubmit={onSubmit} className='space-y-5'>
           {models && (
             <div className="flex flex-col space-y-2">
@@ -157,6 +108,43 @@ export default function Home() {
             </div>
           </div>
         </form>
+      );
+    }
+
+    return (
+      <div>
+        <p className='text-center'>
+          No demo is available currently, please contact <a href='https://www.linkedin.com/in/insomnius/'>Muhammad Arief Rahman</a> for demo request.
+        </p>
+      </div>)
+  }
+
+  return (
+    <main>
+      <section className="py-52 space-y-2 px-16 flex">
+        <div className='my-auto'>
+          <h1 className="font-bold text-4xl font-montserrat tracking-wide">
+            AI Face Gender Recognitions Projects
+          </h1>
+          <h2 className='font-bold text-2xl font-lato'>
+            by Joseph Redmon
+          </h2>
+          <p className='font-lato'>
+            This is our web demo portofolio for AI Indonesia first project to create gender recognitions artificial intellegence.
+          </p>
+        </div>
+        <div className='w-1/3 mx-auto'>
+          <Lottie animationData={lottieMeetingAnimation} />
+        </div>
+      </section>
+
+      <Member></Member>
+
+      <section className="w-full py-20 space-y-2">
+        <h1 className="text-center font-semibold text-2xl">
+          Demo
+        </h1>
+        {demo()}
 
         {previewImage && (
           <div className='flex'>
