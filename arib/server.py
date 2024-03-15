@@ -24,9 +24,14 @@ for dir in list_model_dirs:
     if '.h5' in dir:
         list_models[dir] = load_model(f"model_saved/{dir}")
 
+list_available_models = list(list_models.keys())
+
+print("list models", list_models)
+print("list available models", list_available_models)
+
 @app.route('/models', methods=['GET'])
 def models():
-    return jsonify({'models': list_model_dirs})
+    return jsonify({'models': list_available_models})
 
 @app.route('/predict', methods=['POST'])
 def predict_gender():
@@ -38,7 +43,7 @@ def predict_gender():
 
     model = request.form.get('model')
     print("Model used for the request", model)
-    if model not in list_model_dirs :
+    if model not in list_available_models :
         return jsonify({'error': 'Model is invalid type'}), 400
 
     saved_model = list_models[model]
@@ -53,7 +58,7 @@ def predict_gender():
     with tempfile.NamedTemporaryFile(suffix='.'+file_extension, delete=False) as temp_file:
         file.save(temp_file)
         print("Temp file name:", temp_file.name)
-        img = image.load_img(temp_file.name, target_size=(299, 299))
+        img = image.load_img(temp_file.name, target_size=(saved_model.input_shape[1], saved_model.input_shape[2]))
         img_array = image.img_to_array(img)
         img_array = np.expand_dims(img_array, axis=0)
         img_array = preprocess_input(img_array)
